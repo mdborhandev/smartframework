@@ -1,0 +1,83 @@
+@model List<Employee>
+
+@{
+    ViewData["Title"] = "Employees";
+    var emp = ViewBag.Employee as Employee;
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">@(emp?.Id > 0 ? "Edit" : "Create") Employee</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="Save">
+                        <input type="hidden" name="Id" value="@(emp?.Id ?? 0)" />
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input name="Name" value="@(emp?.Name ?? "")" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input name="Email" value="@(emp?.Email ?? "")" type="email" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input name="Phone" value="@(emp?.Phone ?? "")" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Department</label>
+                            <input name="Department" value="@(emp?.Department ?? "")" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Designation</label>
+                            <input name="Designation" value="@(emp?.Designation ?? "")" class="form-control" />
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">@(emp?.Id > 0 ? "Update" : "Save")</button>
+                        @if (emp?.Id > 0)
+                        {
+                            <a asp-action="Index" class="btn btn-secondary w-100 mt-2">Cancel</a>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Employee List</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-bordered table-striped">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Department</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var e in Model)
+                            {
+                                <tr>
+                                    <td>@e.Name</td>
+                                    <td>@e.Email</td>
+                                    <td>@e.Department</td>
+                                    <td>
+                                        <a asp-action="Index" asp-route-id="@e.Id" class="btn btn-sm btn-warning">Edit</a>
+                                        <form method="post" asp-action="Delete" asp-route-id="@e.Id" class="d-inline" onsubmit="return confirm('Delete this employee?')">
+                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
