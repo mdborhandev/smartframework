@@ -17,7 +17,7 @@ public class Employee
 
     public string? Department { get; set; }
 
-    public string? Designation { get; set; }
+    public decimal Salary { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

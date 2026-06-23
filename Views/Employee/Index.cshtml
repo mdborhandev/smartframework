@@ -1,83 +1,150 @@
-@model List<Employee>
-
 @{
-    ViewData["Title"] = "Employees";
-    var emp = ViewBag.Employee as Employee;
+    ViewData["Title"] = "Employee List";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-md-5">
-            <div class="card shadow mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">@(emp?.Id > 0 ? "Edit" : "Create") Employee</h5>
-                </div>
-                <div class="card-body">
-                    <form method="post" asp-action="Save">
-                        <input type="hidden" name="Id" value="@(emp?.Id ?? 0)" />
-                        <div class="mb-3">
-                            <label class="form-label">Name</label>
-                            <input name="Name" value="@(emp?.Name ?? "")" class="form-control" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input name="Email" value="@(emp?.Email ?? "")" type="email" class="form-control" required />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Phone</label>
-                            <input name="Phone" value="@(emp?.Phone ?? "")" class="form-control" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Department</label>
-                            <input name="Department" value="@(emp?.Department ?? "")" class="form-control" />
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Designation</label>
-                            <input name="Designation" value="@(emp?.Designation ?? "")" class="form-control" />
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">@(emp?.Id > 0 ? "Update" : "Save")</button>
-                        @if (emp?.Id > 0)
-                        {
-                            <a asp-action="Index" class="btn btn-secondary w-100 mt-2">Cancel</a>
-                        }
-                    </form>
-                </div>
+<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
+
+<div class="container-fluid mt-4">
+    <div class="card shadow">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Employee List</h4>
+            <div class="d-flex gap-2">
+                <input type="text" id="searchInput" class="form-control" placeholder="Search..." style="width: 250px;">
+                <button class="btn btn-primary" onclick="openModal(0)">+ Add</button>
             </div>
         </div>
-        <div class="col-md-7">
-            <div class="card shadow">
-                <div class="card-header bg-dark text-white">
-                    <h5 class="mb-0">Employee List</h5>
-                </div>
-                <div class="card-body">
-                    <table class="table table-bordered table-striped">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Department</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var e in Model)
-                            {
-                                <tr>
-                                    <td>@e.Name</td>
-                                    <td>@e.Email</td>
-                                    <td>@e.Department</td>
-                                    <td>
-                                        <a asp-action="Index" asp-route-id="@e.Id" class="btn btn-sm btn-warning">Edit</a>
-                                        <form method="post" asp-action="Delete" asp-route-id="@e.Id" class="d-inline" onsubmit="return confirm('Delete this employee?')">
-                                            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
+        <div class="card-body">
+            <div id="employeeTable"></div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="employeeModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add Employee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="employeeForm">
+                    <input type="hidden" id="empId" value="0" />
+                    <div class="mb-3">
+                        <label class="form-label">Name</label>
+                        <input id="empName" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input id="empEmail" type="email" class="form-control" required />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input id="empPhone" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Department</label>
+                        <input id="empDepartment" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Salary</label>
+                        <input id="empSalary" type="number" step="0.01" class="form-control" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="saveEmployee()">Save</button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <script>
+        let table;
+
+        $(document).ready(function () {
+            table = new Tabulator("#employeeTable", {
+                ajaxURL: "/Employee/GetData",
+                ajaxResponse: function (url, params, response) {
+                    return response.data;
+                },
+                layout: "fitColumns",
+                pagination: "local",
+                paginationSize: 10,
+                columns: [
+                    { title: "Name", field: "name", sorter: "string", width: 150 },
+                    { title: "Email", field: "email", sorter: "string" },
+                    { title: "Phone", field: "phone", sorter: "string", width: 130 },
+                    { title: "Department", field: "department", sorter: "string", width: 100 },
+                    { title: "Salary", field: "salary", sorter: "number", formatter: "money", formatterParams: { precision: 2 }, width: 120 },
+                    {
+                        title: "Action", field: "id", width: 150, formatter: function (cell) {
+                            const id = cell.getValue();
+                            return `<button class="btn btn-sm btn-warning me-1" onclick="openModal(${id})">Edit</button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteEmployee(${id})">Delete</button>`;
+                        }
+                    }
+                ]
+            });
+
+            $("#searchInput").on("keyup", function () {
+                table.setFilter("name", "like", $(this).val());
+            });
+        });
+
+        function openModal(id) {
+            $("#empId").val(id);
+            if (id === 0) {
+                $("#modalTitle").text("Add Employee");
+                $("#employeeForm")[0].reset();
+                $("#employeeModal").modal("show");
+                return;
+            }
+
+            $.get("/Employee/GetById/" + id, function (data) {
+                $("#modalTitle").text("Edit Employee");
+                $("#empId").val(data.id);
+                $("#empName").val(data.name);
+                $("#empEmail").val(data.email);
+                $("#empPhone").val(data.phone || "");
+                $("#empDepartment").val(data.department || "");
+                $("#empSalary").val(data.salary || 0);
+                $("#employeeModal").modal("show");
+            });
+        }
+
+        function saveEmployee() {
+            const data = {
+                Id: parseInt($("#empId").val()),
+                Name: $("#empName").val(),
+                Email: $("#empEmail").val(),
+                Phone: $("#empPhone").val(),
+                Department: $("#empDepartment").val(),
+                Salary: parseFloat($("#empSalary").val()) || 0
+            };
+
+            $.ajax({
+                url: "/Employee/Save",
+                method: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(data),
+                success: function () {
+                    $("#employeeModal").modal("hide");
+                    table.replaceData();
+                },
+                error: function () {
+                    alert("Error saving employee");
+                }
+            });
+        }
+
+        function deleteEmployee(id) {
+            if (!confirm("Delete this employee?")) return;
+            $.post("/Employee/Delete/" + id, function () {
+                table.replaceData();
+            });
+        }
+    </script>
+}

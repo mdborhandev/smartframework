@@ -15,27 +15,31 @@ public class EmployeeController : Controller
         _db = db;
     }
 
-    public async Task<IActionResult> Index(int? id)
+    public IActionResult Index()
     {
-        var employees = await _db.Employees.ToListAsync();
+        return View();
+    }
 
-        Employee? employee = null;
-        if (id.HasValue)
-            employee = await _db.Employees.FindAsync(id);
+    [HttpGet]
+    public async Task<IActionResult> GetData()
+    {
+        var employees = await _db.Employees.OrderBy(e => e.Id).ToListAsync();
+        return Json(new { data = employees });
+    }
 
-        ViewBag.Employee = employee;
-        return View(employees);
+    [HttpGet]
+    public async Task<IActionResult> GetById(int id)
+    {
+        var employee = await _db.Employees.FindAsync(id);
+        if (employee == null) return NotFound();
+        return Json(employee);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Save(Employee model)
+    public async Task<IActionResult> Save([FromBody] Employee model)
     {
         if (!ModelState.IsValid)
-        {
-            var employees = await _db.Employees.ToListAsync();
-            ViewBag.Employee = model;
-            return View("Index", employees);
-        }
+            return BadRequest(ModelState);
 
         if (model.Id == 0)
         {
@@ -51,22 +55,21 @@ public class EmployeeController : Controller
             existing.Email = model.Email;
             existing.Phone = model.Phone;
             existing.Department = model.Department;
-            existing.Designation = model.Designation;
+            existing.Salary = model.Salary;
         }
 
         await _db.SaveChangesAsync();
-        return RedirectToAction(nameof(Index));
+        return Ok();
     }
 
     [HttpPost]
     public async Task<IActionResult> Delete(int id)
     {
         var employee = await _db.Employees.FindAsync(id);
-        if (employee != null)
-        {
-            _db.Employees.Remove(employee);
-            await _db.SaveChangesAsync();
-        }
-        return RedirectToAction(nameof(Index));
+        if (employee == null) return NotFound();
+
+        _db.Employees.Remove(employee);
+        await _db.SaveChangesAsync();
+        return Ok();
     }
 }
