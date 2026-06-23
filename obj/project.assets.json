@@ -13,11 +13,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/borhan-uddin-fahim/DRIVE A/Projects/WebApplication1/WebApplication1/WebApplication1.csproj",
+      "projectUniqueName": "/home/borhan-uddin-fahim/DRIVE A/Projects/smartframework/WebApplication1.csproj",
       "projectName": "WebApplication1",
-      "projectPath": "/home/borhan-uddin-fahim/DRIVE A/Projects/WebApplication1/WebApplication1/WebApplication1.csproj",
+      "projectPath": "/home/borhan-uddin-fahim/DRIVE A/Projects/smartframework/WebApplication1.csproj",
       "packagesPath": "/home/borhan-uddin-fahim/.nuget/packages/",
-      "outputPath": "/home/borhan-uddin-fahim/DRIVE A/Projects/WebApplication1/WebApplication1/obj/",
+      "outputPath": "/home/borhan-uddin-fahim/DRIVE A/Projects/smartframework/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/borhan-uddin-fahim/.nuget/NuGet/NuGet.Config"
