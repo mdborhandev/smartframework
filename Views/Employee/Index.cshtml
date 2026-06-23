@@ -2,7 +2,7 @@
     ViewData["Title"] = "Employee List";
 }
 
-<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
+<link href="https://unpkg.com/tabulator-tables@6.4.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
 
 <div class="container-fluid mt-4">
     <div class="card shadow">
@@ -60,19 +60,24 @@
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
+    <script src="https://unpkg.com/tabulator-tables@6.4.0/dist/js/tabulator.min.js"></script>
     <script>
         let table;
 
+        function loadData() {
+            var search = $("#searchInput").val() || "";
+            $.get("/Employee/GetData", { page: 1, size: 0, search: search }, function (res) {
+                table.setData(res.data);
+                table.setPage(1);
+            });
+        }
+
         $(document).ready(function () {
             table = new Tabulator("#employeeTable", {
-                ajaxURL: "/Employee/GetData",
-                ajaxResponse: function (url, params, response) {
-                    return response.data;
-                },
                 layout: "fitColumns",
                 pagination: "local",
-                paginationSize: 10,
+                paginationSize: 5,
+                paginationSizeSelector: [5, 10, 20],
                 columns: [
                     { title: "Name", field: "name", sorter: "string", width: 150 },
                     { title: "Email", field: "email", sorter: "string" },
@@ -89,8 +94,14 @@
                 ]
             });
 
+            loadData();
+
+            let searchTimer;
             $("#searchInput").on("keyup", function () {
-                table.setFilter("name", "like", $(this).val());
+                clearTimeout(searchTimer);
+                searchTimer = setTimeout(function () {
+                    loadData();
+                }, 300);
             });
         });
 
@@ -132,7 +143,7 @@
                 data: JSON.stringify(data),
                 success: function () {
                     $("#employeeModal").modal("hide");
-                    table.replaceData();
+                    loadData();
                 },
                 error: function () {
                     alert("Error saving employee");
@@ -143,7 +154,7 @@
         function deleteEmployee(id) {
             if (!confirm("Delete this employee?")) return;
             $.post("/Employee/Delete/" + id, function () {
-                table.replaceData();
+                loadData();
             });
         }
     </script>

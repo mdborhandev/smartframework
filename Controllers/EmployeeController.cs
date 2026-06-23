@@ -21,10 +21,19 @@ public class EmployeeController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetData()
+    public async Task<IActionResult> GetData(int page = 1, int size = 5, string search = "")
     {
-        var employees = await _db.Employees.OrderBy(e => e.Id).ToListAsync();
-        return Json(new { data = employees });
+        var query = _db.Employees.OrderBy(e => e.Id).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+            query = query.Where(e => e.Name.Contains(search) || e.Email.Contains(search) || e.Department!.Contains(search));
+
+        var total = await query.CountAsync();
+
+        if (size <= 0) size = total > 0 ? total : 5;
+
+        var employees = await query.Skip((page - 1) * size).Take(size).ToListAsync();
+        return Json(new { data = employees, last_page = (int)Math.Ceiling((double)total / size), total });
     }
 
     [HttpGet]
