@@ -2,8 +2,6 @@
     ViewData["Title"] = "Employee List";
 }
 
-<link href="https://unpkg.com/tabulator-tables@6.4.0/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet" />
-
 <div class="container-fluid mt-4">
     <div class="card shadow">
         <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -60,7 +58,6 @@
 </div>
 
 @section Scripts {
-    <script src="https://unpkg.com/tabulator-tables@6.4.0/dist/js/tabulator.min.js"></script>
     <script>
         let table;
 
@@ -144,9 +141,11 @@
                 success: function () {
                     $("#employeeModal").modal("hide");
                     loadData();
+                    var isEdit = parseInt($("#empId").val()) > 0;
+                    toastr.success(isEdit ? "Employee updated successfully!" : "Employee created successfully!");
                 },
                 error: function () {
-                    alert("Error saving employee");
+                    toastr.error("Error saving employee");
                 }
             });
         }
@@ -155,6 +154,7 @@
             if (!confirm("Delete this employee?")) return;
             $.post("/Employee/Delete/" + id, function () {
                 loadData();
+                toastr.success("Employee deleted successfully!");
             });
         }
     </script>

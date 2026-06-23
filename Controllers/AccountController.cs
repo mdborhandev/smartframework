@@ -28,7 +28,10 @@ public class AccountController : Controller
 
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, false);
         if (result.Succeeded)
+        {
+            TempData["Success"] = "Login successful!";
             return RedirectToAction("Index", "Employee");
+        }
 
         ModelState.AddModelError("", "Invalid login attempt.");
         return View(model);
@@ -56,6 +59,7 @@ public class AccountController : Controller
         if (result.Succeeded)
         {
             await _signInManager.SignInAsync(user, false);
+            TempData["Success"] = "Account created successfully!";
             return RedirectToAction("Index", "Employee");
         }
 
